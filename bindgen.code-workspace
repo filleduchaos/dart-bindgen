@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "Clang Plugin",
+      "path": "clang_plugin",
+    },
+    {
+      "name": "Dart Bindgen",
+      "path": "bindgen",
+    },
+    {
+      "name": "dlopen",
+      "path": "dlopen"
+    }
+  ]
+}

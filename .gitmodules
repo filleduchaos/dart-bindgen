@@ -1,0 +1,6 @@
+[submodule "clang_plugin/deps/json-parser"]
+	path = clang_plugin/deps/json-parser
+	url = https://github.com/udp/json-parser
+[submodule "clang_plugin/deps/json-builder"]
+	path = clang_plugin/deps/json-builder
+	url = https://github.com/udp/json-builder

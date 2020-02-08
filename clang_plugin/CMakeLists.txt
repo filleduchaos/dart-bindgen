@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
+project(clang_bindgen_plugin VERSION 0.1.0 LANGUAGES C)
+
+set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../build")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+find_package(LibClang REQUIRED)
+include_directories(${LIBCLANG_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/deps/json-parser" "${CMAKE_SOURCE_DIR}/deps/json-builder")
+link_directories(${LIBCLANG_LIBRARY_DIR})
+
+add_subdirectory("${CMAKE_SOURCE_DIR}/deps/json-builder")
+
+add_library(clang_bindgen_plugin SHARED src/plugin.c)
+target_link_libraries(clang_bindgen_plugin PRIVATE clang jsonbuilder)
+
+install (TARGETS clang_bindgen_plugin DESTINATION lib)
