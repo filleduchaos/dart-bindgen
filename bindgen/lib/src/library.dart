@@ -65,7 +65,7 @@ void _writeFunctionDef(CodeBuffer buf, FunctionDeclaration decl) {
 
 void _writeSymbolLookup(CodeBuffer buf, String name) {
   buf.addLine('static ffi.DynamicLibrary _lib;');
-  buf.addLine('static Map<String, Function> _symbolCache = {};');
+  buf.addLine('static final Map<String, Function> _symbolCache = {};');
   buf.addLine();
   buf.addFunction(
     '_\$getDartFunctionFromCache',
