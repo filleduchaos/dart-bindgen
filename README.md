@@ -18,7 +18,7 @@ Currently to use this project you have to clone and build it yourself. You will 
 ```bash
 cd clang_plugin
 mkdir build && cd build
-cmake -S .
+cmake -S ..
 make && make install
 ```
 
