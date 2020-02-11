@@ -31,10 +31,11 @@ class CodeBuffer {
     assert(_blockLevel == 0, 'Can only add classes/typedefs at the top level of a source file');
   }
 
-  void addImport(String uri, { String as = '' }) {
+  void addImport(String uri, { String as = '', String show = '' }) {
     assert(uri.isNotEmpty);
     var import = "import '$uri'";
     if (as.isNotEmpty) import += ' as $as';
+    if (show.isNotEmpty) import += ' show $show';
     _buf.writeln('$import;');
   }
 

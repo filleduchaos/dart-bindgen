@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as path;
-import 'package:bindgen/src/exception.dart';
 
 extension UnwrapStrings on Pointer<Utf8> {
   String unwrap() {
@@ -15,7 +14,7 @@ abstract class Dir {
     return path.join(path.dirname(Platform.script.toFilePath()), '../../build', filePath);
   }
 
-  static String data([ String filePath = '' ]) {
+  static String resource([ String filePath = '' ]) {
     var folder = Platform.environment['DART_BINDGEN_DIR'];
     if (folder == null) {
       var home = Platform.environment['HOME'] ?? Platform.environment['APPDATA'];
@@ -23,42 +22,6 @@ abstract class Dir {
     }
     return path.join(path.absolute(folder, filePath));
   }
-}
-
-String _getPlatformName(String name) {
-  var extension = '.so';
-  if (Platform.isWindows) {
-    extension = '.dll';
-  } else {
-    name = 'lib$name';
-  }
-  if (Platform.isIOS || Platform.isMacOS) extension = '.dylib';
-
-  return name + extension;
-}
-
-DynamicLibrary dlopen(String name, { List<String> folders }) {
-  folders ??= [];
-  folders.insert(0, '');
-
-  var platformName = _getPlatformName(name);
-
-  DynamicLibrary lib;
-  var errors = [];
-
-  for (var folder in folders) {
-    try {
-      lib = DynamicLibrary.open(path.join(folder, platformName));
-      break;
-    }
-    catch (e) { errors.add(e); }
-  }
-  
-  if (lib != null) return lib;
-
-  var errorMsg = StringBuffer()..writeln('error opening library $name');
-  errorMsg.writeAll(errors, '\n');
-  throw BindgenException(errorMsg.toString());
 }
 
 int hashAll(Iterable items) {
