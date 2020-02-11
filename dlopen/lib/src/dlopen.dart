@@ -43,7 +43,7 @@ String _getSoName(String name, String version) {
 
 
 class DlOpen {
-  DlOpen({ Iterable<String> searchPaths }) : _searchPaths = Set.from(searchPaths) ?? {};
+  DlOpen({ Iterable<String> searchPaths }) : _searchPaths = Set.from(searchPaths ?? {});
 
   final Map<OS, DlOpener> _osOverrides = {};
   DlOpener _override;
