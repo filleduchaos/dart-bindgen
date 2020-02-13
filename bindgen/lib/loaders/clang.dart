@@ -23,7 +23,7 @@ class TraversalResult extends ffi.Struct {
 }
 
 class ClangLoader extends Loader {
-  static get _dlopen => DlOpen(searchPaths: [Dir.build('lib'), Dir.resource('plugins')]);
+  static get _dlopen => DlOpen(searchPaths: Dir.loaderSearchPaths);
   static ffi.DynamicLibrary _lib;
   static _WalkClangAst _walkClangAst;
 

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:bindgen/bindgen.dart';
 import 'package:bindgen/loaders.dart';
 
-void main(List<String> arguments) async {
+Future<void> main(List<String> arguments) async {
   exitCode = 0;
 
   var args = Bindgen.parseArguments(arguments);

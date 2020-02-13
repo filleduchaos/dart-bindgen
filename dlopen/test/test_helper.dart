@@ -23,6 +23,7 @@ void buildStubLib(String name, [ String outName ]) {
 }
 
 String _findCCompiler() {
+  print(Platform.script);
   for (var compiler in ['clang', 'gcc']) {
     var result = Process.runSync('command', ['-v', compiler, '>/dev/null', '2>&1']);
     if (result.exitCode == 0) return compiler;
