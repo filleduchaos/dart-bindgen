@@ -38,7 +38,7 @@ Future<void> bindgenCli(List<String> arguments) async {
   }
 }
 
-Future<LibraryMirror> loadDartAndRun(String dartFilePath) {
+Future<LibraryMirror> loadDart(String dartFilePath) {
   _isolate ??= currentMirrorSystem().isolate;
   return _isolate.loadUri(Uri.file(dartFilePath));
 }
