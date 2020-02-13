@@ -12,6 +12,8 @@ executables:
 
 dependencies:
   args: ^1.5.2
+  dlopen:
+    path: ../dlopen
   ffi: ^0.1.3
   path: any
   meta: any

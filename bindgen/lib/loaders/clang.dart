@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'package:ffi/ffi.dart';
+import 'package:dlopen/dlopen.dart';
 import 'package:bindgen/loaders/loader.dart';
 import 'package:bindgen/src/helpers.dart';
 
@@ -22,6 +23,7 @@ class TraversalResult extends ffi.Struct {
 }
 
 class ClangLoader extends Loader {
+  static get _dlopen => DlOpen(searchPaths: [Dir.build('lib'), Dir.resource('plugins')]);
   static ffi.DynamicLibrary _lib;
   static _WalkClangAst _walkClangAst;
 
@@ -29,7 +31,7 @@ class ClangLoader extends Loader {
 
   @override
   void init() {
-    _lib ??= dlopen('clang_bindgen_plugin', folders: [Dir.build('lib'), Dir.data('plugins')]);
+    _lib ??= _dlopen('clang_bindgen_plugin', includeSystem: false);
     _walkClangAst ??= _lib.lookupFunction<_walk_clang_ast_func, _WalkClangAst>('walk_clang_ast');
   }
 
