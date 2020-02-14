@@ -91,7 +91,7 @@ class FfiType {
 
   FfiType.pointerFrom(FfiType pointee)
     : native = 'ffi.Pointer<${pointee.native}>',
-      dart = 'ffi.Pointer<${pointee.dart}>',
+      dart = 'ffi.Pointer<${pointee._pointeeDartType}>',
       kind = pointee.kind,
       pointerDepth = pointee.pointerDepth + 1;
 
@@ -112,6 +112,9 @@ class FfiType {
   bool get isPointer => pointerDepth > 0;
   bool get isPrimitive => kind == FfiTypeKind.primitive && dart != 'void';
 
+  String get _pointeeDartType => isPrimitive ? native : dart;
+
+  @override
   operator ==(other) {
     return other is FfiType &&
       other.dart == dart &&

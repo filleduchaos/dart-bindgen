@@ -10,8 +10,25 @@ extension UnwrapStrings on Pointer<Utf8> {
 }
 
 abstract class Dir {
-  static String build([ String filePath = '' ]) {
-    return path.join(path.dirname(Platform.script.toFilePath()), '../../build', filePath);
+  static List<String> get loaderSearchPaths {
+    var searchPaths = <String>[];
+    var folder = Platform.environment['DART_BINDGEN_DIR'];
+    if (folder != null) {
+      searchPaths.add(folder);
+    }
+    else {
+      try {
+        // For development only, might fail in other environments
+        searchPaths.add(build());
+      } catch (e) { /* */ }
+      var home = Platform.environment['HOME'] ?? Platform.environment['APPDATA'];
+      searchPaths.add(path.join(home, '.dart_bindgen'));
+    }
+    return searchPaths.map((p) => path.join(p, 'lib')).toList();
+  }
+
+  static String build() {
+    return path.join(path.dirname(Platform.script.toFilePath()), '../../build');
   }
 
   static String resource([ String filePath = '' ]) {
