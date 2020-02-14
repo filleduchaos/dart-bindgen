@@ -1,30 +1,19 @@
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
-import '../test_helper.dart';
 import 'package:bindgen/src/code_buffer.dart';
+import '../test_helper.dart';
+import 'generated_library.dart';
 
 void main() {
-  Directory tempDir;
-
-  setUpAll(() {
-    buildLib('hello');
-    tempDir = Directory(e2eTempDir)..createSync()..createTempSync();
-  });
-
-  tearDownAll(() {
-    tempDir?.deleteSync(recursive: true);
-    Directory(e2eBuildDir).deleteSync(recursive: true);
-    Directory(e2eLibDir).deleteSync(recursive: true);
-  });
+  var libHello = GeneratedLibrary('hello');
 
   group('hello_world', () {
-    String inPath, outPath, mainPath;
+    String mainPath;
 
-    setUp(() async {
-      inPath = p.join(e2eSourceDir, 'hello.h');
-      outPath = p.join(tempDir.path, 'libhello.dart');
-      mainPath = p.join(tempDir.path, 'hello.dart');
+    setUpAll(() async {
+      await libHello.build('libhello.dart');
+      mainPath = p.join(libHello.dir, 'hello.dart');
 
       var helloTest = CodeBuffer()
         ..addImport('libhello.dart')
@@ -37,16 +26,14 @@ void main() {
       await File(mainPath).writeAsString(helloTest.toString(), flush: true);
     });
 
+    tearDownAll(libHello.release);
+
     test("prints 'Hello World' to stdout", () async {
-      await bindgenCli(['-o', outPath, inPath]);
-
-      expect(await File(outPath).exists(), true);
-
       var testProcess = await Process.run('dart', [mainPath]);
 
       expect(testProcess.stderr, isEmpty);
       expect(testProcess.exitCode, equals(0));
       expect(testProcess.stdout, equals('Hello World\n'));
     });
-  });
+  }, skip: !isE2E);
 }

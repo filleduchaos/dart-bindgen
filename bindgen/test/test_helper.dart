@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io' show Process, Directory;
+import 'dart:io' show Process, Directory, Platform;
 import 'dart:mirrors';
 import 'package:path/path.dart' as p;
 
@@ -15,6 +15,7 @@ String get e2eSourceDir => p.join(testDir, 'fixtures/src');
 String get e2eBuildDir => p.join(testDir, 'fixtures/build');
 String get e2eLibDir => p.join(testDir, 'fixtures/lib');
 String get e2eTempDir => p.join(testDir, 'e2e/tmp');
+bool get isE2E => Platform.environment['RUN_BINDGEN_E2E'] != null;
 
 Uri get _sourceUri => (reflect(buildLib) as ClosureMirror).function.location.sourceUri;
 
