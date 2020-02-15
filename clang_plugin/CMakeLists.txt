@@ -10,7 +10,7 @@ link_directories(${LIBCLANG_LIBRARY_DIR})
 
 add_subdirectory("${CMAKE_SOURCE_DIR}/deps/json-builder")
 
-add_library(clang_bindgen_plugin SHARED src/plugin.c)
+add_library(clang_bindgen_plugin SHARED src/helpers.c src/plugin.c)
 target_link_libraries(clang_bindgen_plugin PRIVATE clang jsonbuilder)
 
 install (TARGETS clang_bindgen_plugin DESTINATION lib)

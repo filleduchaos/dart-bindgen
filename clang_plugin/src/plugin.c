@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <clang-c/Index.h>
 #include <json-builder.h>
+#include "helpers.h"
 
 const char *clang_args[] = {};
 
@@ -39,19 +40,6 @@ typedef struct WalkerResult {
   WalkerStatus status;
   const char *data;
 } WalkerResult;
-
-char *concat_strings(const char *s1, const char *s2) {
-  char *result = malloc(strlen(s1) + strlen(s2) + 1);
-  strcpy(result, s1);
-  strcat(result, s2);
-  return result;
-}
-
-const char *unwrap_string(CXString cxStr) {
-  const char *str = strdup(clang_getCString(cxStr));
-  clang_disposeString(cxStr);
-  return str;
-};
 
 json_value *new_declaration(CXCursor cursor, const char *type) {
   json_value *data = json_object_new(0);

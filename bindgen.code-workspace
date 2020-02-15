@@ -16,5 +16,19 @@
       "name": "Project Root",
       "path": "."
     }
-  ]
+  ],
+  "settings": {
+    "C_Cpp.default.includePath": [
+      "${workspaceFolder}/**",
+      "/usr/local/Cellar/llvm/**",
+      "/opt/local/libexec/llvm-*/**",
+      "/usr/local/lib/llvm-*/**",
+      "/usr/local/llvm*/**",
+      "/usr/lib/llvm-*/**",
+      "/usr/lib/llvm/**",
+    ],
+    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
+    "C_Cpp.default.cStandard": "c99",
+    "C_Cpp.autoAddFileAssociations": false
+  }
 }
