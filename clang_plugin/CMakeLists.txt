@@ -6,6 +6,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(CLANG_BINDGEN_SOURCES
   src/helpers.c
   src/exceptions.c
+  src/visitors/function.c
+  src/visitors/struct.c
+  src/visitors/type.c
+  src/visitors/visitor.c
   src/plugin.c
 )
 
