@@ -21,6 +21,20 @@ class StructDeclaration extends Declaration {
   final List<VariableDeclaration> fields;
 }
 
+class EnumDeclaration extends Declaration {
+  const EnumDeclaration({ @required this.name });
+
+  factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
+    return EnumDeclaration(
+      name: json['name'] as String,
+    );
+  }
+
+  final String name;
+  final FfiType size = const FfiType.int('ffi.Int32');
+  final List<VariableDeclaration> constants = const [];
+}
+
 class FunctionDeclaration extends Declaration {
   const FunctionDeclaration({
     @required this.name,
