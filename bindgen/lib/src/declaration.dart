@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:meta/meta.dart';
 import 'package:recase/recase.dart';
 import 'package:bindgen/src/types.dart';
@@ -22,17 +23,28 @@ class StructDeclaration extends Declaration {
 }
 
 class EnumDeclaration extends Declaration {
-  const EnumDeclaration({ @required this.name });
+  const EnumDeclaration({
+    @required this.name,
+    @required this.size,
+    @required this.constants,
+  });
 
   factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
+    var size = getTypeInformation(json['size']);
+    var constants = (json['constants'] as Map).cast<String, int>();
+
     return EnumDeclaration(
       name: json['name'] as String,
+      size: size,
+      constants: SplayTreeMap.from(constants, (key1, key2) {
+        return constants[key1].compareTo(constants[key2]);
+      }),
     );
   }
 
   final String name;
-  final FfiType size = const FfiType.int('ffi.Int32');
-  final List<VariableDeclaration> constants = const [];
+  final FfiType size;
+  final SplayTreeMap<String, int> constants;
 }
 
 class FunctionDeclaration extends Declaration {
@@ -62,12 +74,13 @@ class FunctionDeclaration extends Declaration {
 }
 
 class VariableDeclaration extends Declaration {
-  const VariableDeclaration({ @required this.name, @required this.type });
+  const VariableDeclaration({ @required this.name, @required this.type, this.value });
 
   factory VariableDeclaration.fromJson(Map<String, dynamic> json) {
     return VariableDeclaration(
       name: json['name'] as String,
       type: getTypeInformation(json['type']),
+      value: json['value'],
     );
   }
 
@@ -77,6 +90,7 @@ class VariableDeclaration extends Declaration {
 
   final String name;
   final FfiType type;
+  final dynamic value;
 
   String get inNative => '${type.native} $name';
   String get inDart => '${type.dart} $name';

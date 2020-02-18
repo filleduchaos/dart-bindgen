@@ -54,6 +54,17 @@ class CodeBuffer {
     closeBlock();
   }
 
+  void addEnum(String name, Iterable<String> constants) {
+    assertTopLevel();
+
+    _buf.write('enum $name');
+    openBlock();
+    for (var constant in constants) {
+      addLine('$constant,');
+    }
+    closeBlock();
+  }
+
   void addFunction(String name, {
     String returns = 'void',
     Iterable<String> typeParams = const [],

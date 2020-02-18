@@ -45,11 +45,15 @@ class GeneratedLibrary {
     return _functions.invoke(Symbol(name), arguments).reflectee;
   }
 
-  Type findStruct(String name) {
-    var StructClass = _getClass(name);
-    assert(StructClass.isSubtypeOf(StructMirror));
-    return StructClass.reflectedType;
+  ClassMirror findClass(String name, [bool Function(ClassMirror) predicate]) {
+    var mirror = _getClass(name);
+    if (predicate != null) assert(predicate(mirror));
+    return mirror;
   }
+
+  Type findStruct(String name) => findClass(name, (mirror) => mirror.isSubtypeOf(StructMirror)).reflectedType;
+
+  ClassMirror findEnum(String name) => findClass(name, (mirror) => mirror.isEnum);
 
   Future<void> release() async {
     try {
@@ -67,5 +71,13 @@ class GeneratedLibrary {
     var declaration = _lib.declarations[Symbol(name)];
     assert(declaration != null);
     return declaration as ClassMirror;
+  }
+
+  static int getEnumValue(ClassMirror Enum, String member) {
+    assert(Enum.isEnum);
+
+    var memberMirror = Enum.getField(Symbol(member));
+    assert(memberMirror != null);
+    return memberMirror.getField(Symbol('index')).reflectee as int;
   }
 }

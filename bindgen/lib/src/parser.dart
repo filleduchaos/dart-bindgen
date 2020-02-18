@@ -24,7 +24,6 @@ class Parser {
       case 'struct':
         return StructDeclaration.fromJson(json);
       case 'enum':
-        print(json);
         return EnumDeclaration.fromJson(json);
       default:
         var message = _getMessage('unsupported top-level declaration type $type', json);

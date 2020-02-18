@@ -43,7 +43,7 @@ json_value *unwrap_type(CXType type) {
   else if (type.kind == CXType_Pointer)
     return unwrap_pointer(type);
   else if (type.kind == CXType_Record)
-    return unwrap_pointer(type);
+    return unwrap_record(type);
   else if (type.kind == CXType_Elaborated)
     return unwrap_elaborated(type);
   else

@@ -22,6 +22,11 @@ class Library {
     buf.addImport('package:dlopen/dlopen.dart', show: 'DlOpen');
     buf.addLine();
 
+    for (var enumType in members.whereType<EnumDeclaration>()) {
+      _writeEnum(buf, enumType);
+    }
+    buf.addLine();
+
     for (var struct in members.whereType<StructDeclaration>()) {
       _writeStruct(buf, struct);
     }
@@ -39,6 +44,11 @@ class Library {
 
     return buf.toString();
   }
+}
+
+void _writeEnum(CodeBuffer buf, EnumDeclaration decl) {
+  buf.addEnum(decl.name, decl.constants.keys);
+  buf.addLine();
 }
 
 void _writeStruct(CodeBuffer buf, StructDeclaration decl) {
