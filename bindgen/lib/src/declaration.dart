@@ -30,13 +30,14 @@ class EnumDeclaration extends Declaration {
   });
 
   factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
+    var name = json['name'] as String;
     var size = getTypeInformation(json['size']);
-    var constants = (json['constants'] as Map).cast<String, int>();
+    var constants = _castConstants(json['constants'], name);
 
     return EnumDeclaration(
-      name: json['name'] as String,
+      name: name,
       size: size,
-      constants: SplayTreeMap.from(constants, (key1, key2) {
+      constants: SplayTreeMap.of(constants, (key1, key2) {
         return constants[key1].compareTo(constants[key2]);
       }),
     );
@@ -45,6 +46,28 @@ class EnumDeclaration extends Declaration {
   final String name;
   final FfiType size;
   final SplayTreeMap<String, int> constants;
+
+  bool get isSimple {
+    var valueSet = Set.of(constants.values);
+    return valueSet.length == constants.length &&
+      valueSet.first == 0 &&
+      valueSet.last == constants.length - 1;
+  }
+
+  static Map<String, int> _castConstants(dynamic json, String name) {
+    var constants = (json as Map).cast<String, int>();
+    var isNamespaced = constants.keys.every((constant) {
+      return constant.startsWith(name);
+    });
+
+    if (!isNamespaced) return constants;
+
+    return constants.map((constant, value) {
+      constant = constant.replaceFirst(name, '');
+      if (constant.startsWith('_')) constant = constant.substring(1);
+      return MapEntry(constant, value);
+    });
+  }
 }
 
 class FunctionDeclaration extends Declaration {

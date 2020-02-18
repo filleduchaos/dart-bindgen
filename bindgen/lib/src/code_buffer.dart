@@ -54,7 +54,7 @@ class CodeBuffer {
     closeBlock();
   }
 
-  void addEnum(String name, Iterable<String> constants) {
+  void addEnum(String name, { @required Iterable<String> constants }) {
     assertTopLevel();
 
     _buf.write('enum $name');

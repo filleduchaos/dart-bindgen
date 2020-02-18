@@ -22,5 +22,13 @@ void main() {
         expect(GeneratedLibrary.getEnumValue(Color, member), equals(index));
       });
     });
+
+    test('Namespaced is a namespaced basic enum', () {
+      var Namespaced = libEnums.findEnum('Namespaced');
+      var members = ['foo', 'bar', 'baz', 'quuz'];
+      members.eachWithIndex((member, index) {
+        expect(GeneratedLibrary.getEnumValue(Namespaced, member), equals(index));
+      });
+    });
   }, skip: !isE2E);
 }

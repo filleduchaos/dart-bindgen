@@ -47,8 +47,10 @@ class Library {
 }
 
 void _writeEnum(CodeBuffer buf, EnumDeclaration decl) {
-  buf.addEnum(decl.name, decl.constants.keys);
-  buf.addLine();
+  if (decl.isSimple) {
+    buf.addEnum(decl.name, constants: decl.constants.keys);
+    buf.addLine();
+  }
 }
 
 void _writeStruct(CodeBuffer buf, StructDeclaration decl) {
