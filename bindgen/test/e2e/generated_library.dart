@@ -5,6 +5,8 @@ import 'package:path/path.dart' as p;
 import 'package:recase/recase.dart' show StringReCase;
 import '../test_helper.dart';
 
+export 'dart:mirrors';
+
 final StructMirror = reflectType(Struct);
 
 class GeneratedLibrary {
@@ -74,10 +76,9 @@ class GeneratedLibrary {
   }
 
   static int getEnumValue(ClassMirror Enum, String member) {
-    assert(Enum.isEnum);
-
     var memberMirror = Enum.getField(Symbol(member));
     assert(memberMirror != null);
+    assert(memberMirror.type == Enum);
     return memberMirror.getField(Symbol('index')).reflectee as int;
   }
 }

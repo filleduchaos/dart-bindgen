@@ -22,20 +22,9 @@ class Library {
     buf.addImport('package:dlopen/dlopen.dart', show: 'DlOpen');
     buf.addLine();
 
-    for (var enumType in members.whereType<EnumDeclaration>()) {
-      _writeEnum(buf, enumType);
-    }
-    buf.addLine();
-
-    for (var struct in members.whereType<StructDeclaration>()) {
-      _writeStruct(buf, struct);
-    }
-    buf.addLine();
-
-    for (var func in members.whereType<FunctionDeclaration>()) {
-      _writeFunctionDef(buf, func);
-    }
-    buf.addLine();
+    _write(buf, members.whereType<EnumDeclaration>());
+    _write(buf, members.whereType<StructDeclaration>());
+    _write(buf, members.whereType<FunctionDeclaration>());
 
     buf.addClass('Lib${name.pascalCase}', builder: (classBuf) {
       _writeSymbolLookup(classBuf, name);
@@ -46,11 +35,43 @@ class Library {
   }
 }
 
+void _write<T extends Declaration>(CodeBuffer buf, Iterable<T> declarations) {
+  void Function(CodeBuffer, T) writer = (() {
+    switch (T) {
+      case EnumDeclaration: return _writeEnum;
+      case StructDeclaration: return _writeStruct;
+      case FunctionDeclaration: return _writeFunctionDef;
+      default: throw ArgumentError('$T should be a top-level declaration type');
+    }
+  })();
+
+  for (var decl in declarations) {
+    writer(buf, decl);
+  }
+  buf.addLine();
+}
+
 void _writeEnum(CodeBuffer buf, EnumDeclaration decl) {
   if (decl.isSimple) {
     buf.addEnum(decl.name, constants: decl.constants.keys);
-    buf.addLine();
   }
+  else {
+    buf.addClass(decl.name, builder: (classBuf) {
+      classBuf.addSpacedLine('const ${decl.name}._(this.index, this._name);');
+      classBuf.addLine('final int index;');
+      classBuf.addSpacedLine('final String _name;');
+
+      classBuf.addGetter('name', type: 'String', expression: '_name');
+      classBuf.addFunction('toString', returns: 'String', override: true, expression: "'${decl.name}.\${name}'");
+      classBuf.addLine();
+      
+      decl.constants.forEach((constant, value) {
+        classBuf.addLine("static const $constant = ${decl.name}._($value, '$constant');");
+      });
+    });
+  }
+
+  buf.addLine();
 }
 
 void _writeStruct(CodeBuffer buf, StructDeclaration decl) {

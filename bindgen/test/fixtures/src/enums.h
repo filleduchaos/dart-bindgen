@@ -22,23 +22,10 @@ enum DataType {
   Long = 64,
 };
 
-enum FromOne {
-  one = 1,
-  two,
-  three,
-  four,
-  five,
-  six,
-  seven,
-  eight,
-  nine,
-  ten
-};
-
 enum NetWorth {
-  thousand = 1000,
-  million = thousand * 1000,
-  billion = million * 1000,
+  thousand = 1000L,
+  million = thousand * 1000L,
+  billion = million * 1000L,
   trillion = billion * 1000L,
 };
 

@@ -1,4 +1,4 @@
-import 'dart:collection';
+import 'dart:math' as math;
 import 'package:meta/meta.dart';
 import 'package:recase/recase.dart';
 import 'package:bindgen/src/types.dart';
@@ -32,26 +32,23 @@ class EnumDeclaration extends Declaration {
   factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
     var name = json['name'] as String;
     var size = getTypeInformation(json['size']);
-    var constants = _castConstants(json['constants'], name);
 
     return EnumDeclaration(
       name: name,
       size: size,
-      constants: SplayTreeMap.of(constants, (key1, key2) {
-        return constants[key1].compareTo(constants[key2]);
-      }),
+      constants: _castConstants(json['constants'], name),
     );
   }
 
   final String name;
   final FfiType size;
-  final SplayTreeMap<String, int> constants;
+  final Map<String, int> constants;
 
   bool get isSimple {
     var valueSet = Set.of(constants.values);
     return valueSet.length == constants.length &&
-      valueSet.first == 0 &&
-      valueSet.last == constants.length - 1;
+      valueSet.reduce(math.min) == 0 &&
+      valueSet.reduce(math.max) == constants.length - 1;
   }
 
   static Map<String, int> _castConstants(dynamic json, String name) {

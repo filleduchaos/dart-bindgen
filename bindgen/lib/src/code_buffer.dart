@@ -44,6 +44,11 @@ class CodeBuffer {
     _buf.writeln(line);
   }
 
+  void addSpacedLine(String line) {
+    addLine(line);
+    addLine();
+  }
+
   void addClass(String name, { String parent = '', @required CodeWriter builder }) {
     assertTopLevel();
 
@@ -65,19 +70,34 @@ class CodeBuffer {
     closeBlock();
   }
 
+  void addGetter(String name, { @required String type, @required String expression }) {
+    addSpacedLine('$type get $name => $expression;');
+  }
+
   void addFunction(String name, {
     String returns = 'void',
     Iterable<String> typeParams = const [],
     Iterable<String> args = const [],
-    @required CodeWriter builder,
+    bool override = false,
+    CodeWriter builder,
+    String expression,
   }) {
+    assert((builder == null) ^ (expression == null));
+
+    if (override) addLine('@override');
     _addIndent();
     _buf.write('$returns $name');
     if (typeParams.isNotEmpty) _buf.write("<${typeParams.join(', ')}>");
     _buf.write("(${args.join(', ')})");
-    openBlock();
-    builder(this);
-    closeBlock();
+
+    if (expression != null) {
+      _buf.write(' => $expression;\n');
+    }
+    else {
+      openBlock();
+      builder(this);
+      closeBlock();
+    }
   }
 
   void openBlock([ String statement = '' ]) {
