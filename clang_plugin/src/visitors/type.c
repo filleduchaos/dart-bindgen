@@ -14,12 +14,24 @@ static json_value *unwrap_pointer(CXType type) {
   return pointer;
 }
 
-static json_value *unwrap_record(CXType type) {
-  json_value *strct = json_object_new(0);
+static json_value *unwrap_user_defined(CXType type, const char *kind) {
+  json_value *userdef = json_object_new(0);
   const char *name = unwrap_string(clang_getTypeSpelling(type));
-  json_object_push(strct, "kind", json_string_new("struct"));
-  json_object_push(strct, "value", json_string_new(name));
-  return strct;
+  json_object_push(userdef, "kind", json_string_new(kind));
+  json_object_push(userdef, "value", json_string_new(name));
+  return userdef;
+}
+
+static json_value *unwrap_struct(CXType type) {
+  return unwrap_user_defined(type, "struct");
+}
+
+static json_value *unwrap_enum(CXType type) {
+  json_value *enumm = unwrap_user_defined(type, "enum");
+  CXCursor cursor = clang_getTypeDeclaration(type);
+  CXType underlyingType = clang_getEnumDeclIntegerType(cursor);
+  json_object_push(enumm, "type", unwrap_type(underlyingType));
+  return enumm;
 }
 
 static json_value *unwrap_elaborated(CXType type) {
@@ -43,7 +55,9 @@ json_value *unwrap_type(CXType type) {
   else if (type.kind == CXType_Pointer)
     return unwrap_pointer(type);
   else if (type.kind == CXType_Record)
-    return unwrap_record(type);
+    return unwrap_struct(type);
+  else if (type.kind == CXType_Enum)
+    return unwrap_enum(type);
   else if (type.kind == CXType_Elaborated)
     return unwrap_elaborated(type);
   else

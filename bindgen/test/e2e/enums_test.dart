@@ -7,6 +7,13 @@ import '../test_helper.dart' show isE2E, WithIndex;
 void main() {
   var libEnums = GeneratedLibrary('enums');
 
+  void Function(String, int) _testFunctionCalling(ClassMirror Enum, String testFunc) {
+    return (member, result) {
+      var constant = GeneratedLibrary.getEnumConstant(Enum, member);
+      expect(libEnums.call(testFunc, [constant]), equals(result));
+    };
+  }
+
   group('enums', () {
     setUpAll(() async {
       await libEnums.build();
@@ -19,12 +26,20 @@ void main() {
       var Color = libEnums.findEnum('Color');
       var members = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
       members.eachWithIndex(_testMembers(Color));
+
+      ({
+        for (var m in members) m: m == 'green' ? 1 : 0,
+      }).forEach(_testFunctionCalling(Color, 'isGreen'));
     });
 
     test('Namespaced is a namespaced basic enum', () {
       var Namespaced = libEnums.findEnum('Namespaced');
       var members = ['foo', 'bar', 'baz', 'quuz'];
       members.eachWithIndex(_testMembers(Namespaced));
+
+      ({
+        for (var m in members) m: m == 'foo' ? 1 : 0,
+      }).forEach(_testFunctionCalling(Namespaced, 'isFoo'));
     });
 
     test('DataType is a complex enum', () {
@@ -36,6 +51,9 @@ void main() {
         'Long': 64,
       };
       members.forEach(_testMembers(DataType));
+      members
+        .map((k, v) => MapEntry(k, v > 24 ? 1 : 0))
+        .forEach(_testFunctionCalling(DataType, 'canHold24Bits'));
     });
 
     test('NetWorth is a complex enum with Long values', () {
@@ -47,6 +65,9 @@ void main() {
         'trillion': 1000 * 1000 * 1000 * 1000,
       };
       members.forEach(_testMembers(NetWorth));
+      members
+        .map((k, v) => MapEntry(k, k == 'billion' ? 1 : 0))
+        .forEach(_testFunctionCalling(NetWorth, 'isBillionaire'));
     });
 
     test('Status is a complex enum with negative values', () {
@@ -57,10 +78,13 @@ void main() {
         'warning': -1,
       };
       members.forEach(_testMembers(Status));
+      members
+        .map((k, v) => MapEntry(k, k == 'success' ? 0 : 1))
+        .forEach(_testFunctionCalling(Status, 'failed'));
     });
   }, skip: !isE2E);
 }
 
 void Function(String, int) _testMembers(ClassMirror Enum) => (member, value) {
-  expect(GeneratedLibrary.getEnumValue(Enum, member), equals(value));
+  expect(GeneratedLibrary.getEnumConstantValue(Enum, member), equals(value));
 };

@@ -75,7 +75,14 @@ class GeneratedLibrary {
     return declaration as ClassMirror;
   }
 
-  static int getEnumValue(ClassMirror Enum, String member) {
+  static dynamic getEnumConstant(ClassMirror Enum, String member) {
+    var memberMirror = Enum.getField(Symbol(member));
+    assert(memberMirror != null);
+    assert(memberMirror.type == Enum);
+    return memberMirror.reflectee;
+  }
+
+  static int getEnumConstantValue(ClassMirror Enum, String member) {
     var memberMirror = Enum.getField(Symbol(member));
     assert(memberMirror != null);
     assert(memberMirror.type == Enum);

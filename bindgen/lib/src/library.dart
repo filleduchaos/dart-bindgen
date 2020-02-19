@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:recase/recase.dart';
 import 'package:bindgen/src/code_buffer.dart';
 import 'package:bindgen/src/declaration.dart';
+import 'package:bindgen/src/types.dart';
 
 class Library {
   const Library({
@@ -122,14 +123,20 @@ void _writeFunctions(CodeBuffer buf, Iterable<FunctionDeclaration> funcs) {
   for (var func in funcs) {
     final def = func.typedef;
     var dartType = def.dart == def.native ? def.nativeName : def.dartName;
-    final args = func.arguments.map((arg) => arg.name).join(', ');
+    final args = func.arguments.map((arg) {
+      var representation = _DartRepresentation.of(arg.type.kind);
+      return representation.ofValue(arg.name);
+    }).join(', ');
     var name = "'${func.name}'";
 
     buf.addLine();
     buf.addFunction(
       func.name.camelCase,
       returns: func.returnType.dart,
-      args: func.arguments.map((arg) => arg.inDart),
+      args: func.arguments.map((arg) {
+        var representation = _DartRepresentation.of(arg.type.kind);
+        return '${representation.ofType(arg.type)} ${arg.name}';
+      }),
       builder: (funcBuf) {
         
         funcBuf.addLine('var cachedFunc = _\$getDartFunctionFromCache<$dartType>($name);');
@@ -140,4 +147,27 @@ void _writeFunctions(CodeBuffer buf, Iterable<FunctionDeclaration> funcs) {
       },
     );
   }
+}
+
+class _DartRepresentation {
+  const _DartRepresentation(this.ofType, this.ofValue);
+
+  final String Function(FfiType) ofType;
+  final String Function(String) ofValue;
+
+  factory _DartRepresentation.of(FfiTypeKind kind) {
+    if (kind == FfiTypeKind.enumerated) {
+      return const _DartRepresentation(_enumType, _enumValue);
+    }
+
+    return const _DartRepresentation(_identityType, _identityValue);
+  }
+
+  static String _identityType(FfiType type) => type.dart;
+
+  static String _identityValue(String name) => name;
+
+  static String _enumType(FfiType type) => type.alias;
+
+  static String _enumValue(String name) => '$name.index';
 }

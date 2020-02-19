@@ -19,12 +19,12 @@ static enum CXChildVisitResult visitor(CXCursor cursor, CXCursor parent, CXClien
 
 json_value *visit_enum(CXCursor cursor) {
   json_value *data = new_declaration(cursor, "enum");
-  CXType sizeType = clang_getEnumDeclIntegerType(cursor);
+  CXType underlyingType = clang_getEnumDeclIntegerType(cursor);
   json_value *constants = json_object_new(0);
 
   clang_visitChildren(cursor, visitor, constants);
   
-  json_object_push(data, "size", unwrap_type(sizeType));
+  json_object_push(data, "underlying", unwrap_type(underlyingType));
   json_object_push(data, "constants", constants);
   return data;
 }

@@ -25,23 +25,22 @@ class StructDeclaration extends Declaration {
 class EnumDeclaration extends Declaration {
   const EnumDeclaration({
     @required this.name,
-    @required this.size,
+    @required this.underlyingType,
     @required this.constants,
   });
 
   factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
     var name = json['name'] as String;
-    var size = getTypeInformation(json['size']);
 
     return EnumDeclaration(
       name: name,
-      size: size,
+      underlyingType: getTypeInformation(json['underlying']),
       constants: _castConstants(json['constants'], name),
     );
   }
 
   final String name;
-  final FfiType size;
+  final FfiType underlyingType;
   final Map<String, int> constants;
 
   bool get isSimple {

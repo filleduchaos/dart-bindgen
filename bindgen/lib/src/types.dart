@@ -2,19 +2,12 @@ import 'package:meta/meta.dart';
 import 'package:bindgen/src/helpers.dart' show hashAll;
 
 FfiType getTypeInformation(dynamic json) {
-  if (json is String) {
-    var builtin = _typeInfo[json];
-    if (builtin == null) {
-      throw ArgumentError('Unable to understand type $json');
-    }
-
-    return builtin;
-  }
+  if (json is String) return _getBuiltin(json);
 
   var type = json as Map<String, dynamic>;
-  var value = type['value'];
 
   if (type['pointer'] == true) {
+    var value = type['value'];
     // Special case for strings
     if (value is String && _charTypes.contains(value)) {
       return const FfiType.string();
@@ -24,15 +17,42 @@ FfiType getTypeInformation(dynamic json) {
   }
 
   if (type['elaborated'] == true) {
-    var kindStr = type['kind'] as String;
-    if (kindStr == null) return getTypeInformation(value);
-
-    var kind = _kindFromString(kindStr);
-    value = (value as String).replaceFirst('$kindStr ', '');
-    return FfiType(native: value, dart: value, kind: kind);
+    return _getElaboratedType(type);
   }
 
-  throw ArgumentError('Unable to understand type $json');
+  throw ArgumentError('Unable to understand type $type');
+}
+
+
+FfiType _getBuiltin(String type) {
+  var builtin = _typeInfo[type];
+  if (builtin == null) {
+    throw ArgumentError('Unable to understand type $type');
+  }
+
+  return builtin;
+}
+
+FfiType _getElaboratedType(Map<String, dynamic> type) {
+  var value = type['value'];
+
+  var kindStr = type['kind'] as String;
+
+  if (kindStr == null) return getTypeInformation(value);
+
+  var kind = _kindFromString(kindStr);
+  value = (value as String).replaceFirst('$kindStr ', '');
+
+  if (type['type'] == null) return FfiType(native: value, dart: value, kind: kind);
+
+  var underlying = getTypeInformation(type['type']);
+  return FfiType(
+    native: underlying.native,
+    dart: underlying.dart,
+    alias: value,
+    kind: kind,
+    pointerDepth: underlying.pointerDepth,
+  );
 }
 
 const _typeInfo = {
@@ -69,21 +89,23 @@ FfiTypeKind _kindFromString(String str) {
     case 'primitive': return FfiTypeKind.primitive;
     case 'string': return FfiTypeKind.string;
     case 'struct': return FfiTypeKind.struct;
-    case 'enumerated': return FfiTypeKind.enumerated;
+    case 'enum': return FfiTypeKind.enumerated;
     default: throw ArgumentError('Invalid ffi type kind: $str');
   }
 }
 
+@sealed
 class FfiType {
   const FfiType({
     @required this.native,
     @required this.dart,
+    this.alias,
     @required this.kind,
     this.pointerDepth = 0,
   });
 
   const FfiType.primitive({ @required this.native, @required this.dart })
-    : kind = FfiTypeKind.primitive, pointerDepth = 0;
+    : kind = FfiTypeKind.primitive, pointerDepth = 0, alias = null;
 
   const FfiType.int(String native) : this.primitive(dart: 'int', native: native);
 
@@ -92,12 +114,14 @@ class FfiType {
   FfiType.pointerFrom(FfiType pointee)
     : native = 'ffi.Pointer<${pointee.native}>',
       dart = 'ffi.Pointer<${pointee._pointeeDartType}>',
+      alias = null,
       kind = pointee.kind,
       pointerDepth = pointee.pointerDepth + 1;
 
   const FfiType._utf({ int size })
     : native = 'ffi.Pointer<ffi.Utf$size>',
       dart = 'ffi.Pointer<ffi.Utf$size>',
+      alias = null,
       kind = FfiTypeKind.string,
       pointerDepth = 0;
 
@@ -106,11 +130,13 @@ class FfiType {
 
   final String native;
   final String dart;
+  final String alias;
   final FfiTypeKind kind;
   final int pointerDepth;
 
   bool get isPointer => pointerDepth > 0;
   bool get isPrimitive => kind == FfiTypeKind.primitive && dart != 'void';
+  bool get isEnum => kind == FfiTypeKind.enumerated;
 
   String get _pointeeDartType => isPrimitive ? native : dart;
 
@@ -119,9 +145,11 @@ class FfiType {
     return other is FfiType &&
       other.dart == dart &&
       other.native == native &&
-      other.kind == kind;
+      other.alias == alias &&
+      other.kind == kind &&
+      other.pointerDepth == pointerDepth;
   }
 
   @override
-  int get hashCode => hashAll([native, dart, kind, pointerDepth]);
+  int get hashCode => hashAll([native, dart, alias, kind, pointerDepth]);
 }
