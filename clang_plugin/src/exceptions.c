@@ -19,6 +19,7 @@ const char *get_exception_message() {
     const char *message = (*format)(ExceptionContext.exception);
     free(ExceptionContext.exception);
     ExceptionContext.exception = NULL;
+    return message;
   }
   else {
     throw(&RuntimeException, "Cannot retrieve exception message outside a catch block");

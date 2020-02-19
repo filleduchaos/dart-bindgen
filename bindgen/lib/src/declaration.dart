@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:meta/meta.dart';
 import 'package:recase/recase.dart';
 import 'package:bindgen/src/types.dart';
@@ -19,6 +20,50 @@ class StructDeclaration extends Declaration {
 
   final String name;
   final List<VariableDeclaration> fields;
+}
+
+class EnumDeclaration extends Declaration {
+  const EnumDeclaration({
+    @required this.name,
+    @required this.underlyingType,
+    @required this.constants,
+  });
+
+  factory EnumDeclaration.fromJson(Map<String, dynamic> json) {
+    var name = json['name'] as String;
+
+    return EnumDeclaration(
+      name: name,
+      underlyingType: getTypeInformation(json['underlying']),
+      constants: _castConstants(json['constants'], name),
+    );
+  }
+
+  final String name;
+  final FfiType underlyingType;
+  final Map<String, int> constants;
+
+  bool get isSimple {
+    var valueSet = Set.of(constants.values);
+    return valueSet.length == constants.length &&
+      valueSet.reduce(math.min) == 0 &&
+      valueSet.reduce(math.max) == constants.length - 1;
+  }
+
+  static Map<String, int> _castConstants(dynamic json, String name) {
+    var constants = (json as Map).cast<String, int>();
+    var isNamespaced = constants.keys.every((constant) {
+      return constant.startsWith(name);
+    });
+
+    if (!isNamespaced) return constants;
+
+    return constants.map((constant, value) {
+      constant = constant.replaceFirst(name, '');
+      if (constant.startsWith('_')) constant = constant.substring(1);
+      return MapEntry(constant, value);
+    });
+  }
 }
 
 class FunctionDeclaration extends Declaration {
@@ -48,12 +93,13 @@ class FunctionDeclaration extends Declaration {
 }
 
 class VariableDeclaration extends Declaration {
-  const VariableDeclaration({ @required this.name, @required this.type });
+  const VariableDeclaration({ @required this.name, @required this.type, this.value });
 
   factory VariableDeclaration.fromJson(Map<String, dynamic> json) {
     return VariableDeclaration(
       name: json['name'] as String,
       type: getTypeInformation(json['type']),
+      value: json['value'],
     );
   }
 
@@ -63,6 +109,7 @@ class VariableDeclaration extends Declaration {
 
   final String name;
   final FfiType type;
+  final dynamic value;
 
   String get inNative => '${type.native} $name';
   String get inDart => '${type.dart} $name';

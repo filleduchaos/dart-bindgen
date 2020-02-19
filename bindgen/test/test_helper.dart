@@ -49,3 +49,14 @@ void _cmake() {
   var cmake = Process.runSync('cmake', ['-S', '..'], workingDirectory: e2eBuildDir);
   if (cmake.exitCode != 0) throw 'Failed to run cmake';
 }
+
+extension WithIndex<E> on List<E> {
+  void eachWithIndex(void Function(E, int) f) {
+    var index = 0;
+
+    for (final element in this) {
+      f(element, index);
+      index++;
+    }
+  }
+}

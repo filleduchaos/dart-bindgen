@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:recase/recase.dart';
 import 'package:bindgen/src/code_buffer.dart';
 import 'package:bindgen/src/declaration.dart';
+import 'package:bindgen/src/types.dart';
 
 class Library {
   const Library({
@@ -22,15 +23,9 @@ class Library {
     buf.addImport('package:dlopen/dlopen.dart', show: 'DlOpen');
     buf.addLine();
 
-    for (var struct in members.whereType<StructDeclaration>()) {
-      _writeStruct(buf, struct);
-    }
-    buf.addLine();
-
-    for (var func in members.whereType<FunctionDeclaration>()) {
-      _writeFunctionDef(buf, func);
-    }
-    buf.addLine();
+    _write(buf, members.whereType<EnumDeclaration>());
+    _write(buf, members.whereType<StructDeclaration>());
+    _write(buf, members.whereType<FunctionDeclaration>());
 
     buf.addClass('Lib${name.pascalCase}', builder: (classBuf) {
       _writeSymbolLookup(classBuf, name);
@@ -39,6 +34,45 @@ class Library {
 
     return buf.toString();
   }
+}
+
+void _write<T extends Declaration>(CodeBuffer buf, Iterable<T> declarations) {
+  void Function(CodeBuffer, T) writer = (() {
+    switch (T) {
+      case EnumDeclaration: return _writeEnum;
+      case StructDeclaration: return _writeStruct;
+      case FunctionDeclaration: return _writeFunctionDef;
+      default: throw ArgumentError('$T should be a top-level declaration type');
+    }
+  })();
+
+  for (var decl in declarations) {
+    writer(buf, decl);
+  }
+  buf.addLine();
+}
+
+void _writeEnum(CodeBuffer buf, EnumDeclaration decl) {
+  if (decl.isSimple) {
+    buf.addEnum(decl.name, constants: decl.constants.keys);
+  }
+  else {
+    buf.addClass(decl.name, builder: (classBuf) {
+      classBuf.addSpacedLine('const ${decl.name}._(this.index, this._name);');
+      classBuf.addLine('final int index;');
+      classBuf.addSpacedLine('final String _name;');
+
+      classBuf.addGetter('name', type: 'String', expression: '_name');
+      classBuf.addFunction('toString', returns: 'String', override: true, expression: "'${decl.name}.\${name}'");
+      classBuf.addLine();
+      
+      decl.constants.forEach((constant, value) {
+        classBuf.addLine("static const $constant = ${decl.name}._($value, '$constant');");
+      });
+    });
+  }
+
+  buf.addLine();
 }
 
 void _writeStruct(CodeBuffer buf, StructDeclaration decl) {
@@ -89,14 +123,20 @@ void _writeFunctions(CodeBuffer buf, Iterable<FunctionDeclaration> funcs) {
   for (var func in funcs) {
     final def = func.typedef;
     var dartType = def.dart == def.native ? def.nativeName : def.dartName;
-    final args = func.arguments.map((arg) => arg.name).join(', ');
+    final args = func.arguments.map((arg) {
+      var representation = _DartRepresentation.of(arg.type.kind);
+      return representation.ofValue(arg.name);
+    }).join(', ');
     var name = "'${func.name}'";
 
     buf.addLine();
     buf.addFunction(
       func.name.camelCase,
       returns: func.returnType.dart,
-      args: func.arguments.map((arg) => arg.inDart),
+      args: func.arguments.map((arg) {
+        var representation = _DartRepresentation.of(arg.type.kind);
+        return '${representation.ofType(arg.type)} ${arg.name}';
+      }),
       builder: (funcBuf) {
         
         funcBuf.addLine('var cachedFunc = _\$getDartFunctionFromCache<$dartType>($name);');
@@ -107,4 +147,27 @@ void _writeFunctions(CodeBuffer buf, Iterable<FunctionDeclaration> funcs) {
       },
     );
   }
+}
+
+class _DartRepresentation {
+  const _DartRepresentation(this.ofType, this.ofValue);
+
+  final String Function(FfiType) ofType;
+  final String Function(String) ofValue;
+
+  factory _DartRepresentation.of(FfiTypeKind kind) {
+    if (kind == FfiTypeKind.enumerated) {
+      return const _DartRepresentation(_enumType, _enumValue);
+    }
+
+    return const _DartRepresentation(_identityType, _identityValue);
+  }
+
+  static String _identityType(FfiType type) => type.dart;
+
+  static String _identityValue(String name) => name;
+
+  static String _enumType(FfiType type) => type.alias;
+
+  static String _enumValue(String name) => '$name.index';
 }

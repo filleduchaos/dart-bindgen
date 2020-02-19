@@ -2,25 +2,30 @@
 #include "../helpers.h"
 #include "../exceptions.h"
 
-static enum CXChildVisitResult visitor(CXCursor cursor, CXCursor parent, CXClientData clientData) {
-  CXSourceLocation location = clang_getCursorLocation(cursor);
-  if (!clang_Location_isFromMainFile(location)) return CXChildVisit_Continue;
-
+static DeclarationVisitor visitor_for(CXCursor cursor) {
   enum CXCursorKind cursorKind = clang_getCursorKind(cursor);
-  json_value *state = (json_value *)(clientData);
 
   switch (cursorKind) {
     case CXCursor_FunctionDecl:
-      json_array_push(state, visit_function(cursor));
-      break;
+      return visit_function;
     case CXCursor_StructDecl:
-      json_array_push(state, visit_struct(cursor));
-      break;
+      return visit_struct;
+    case CXCursor_EnumDecl:
+      return visit_enum;
     default: {
       const char *type = unwrap_string(clang_getCursorKindSpelling(cursorKind));
       throw(&UnhandledDeclarationException, type);
     }
   }
+}
+
+static enum CXChildVisitResult visitor(CXCursor cursor, CXCursor parent, CXClientData clientData) {
+  CXSourceLocation location = clang_getCursorLocation(cursor);
+  if (!clang_Location_isFromMainFile(location)) return CXChildVisit_Continue;
+
+  json_value *state = (json_value *)(clientData);
+  DeclarationVisitor visit_decl = visitor_for(cursor);
+  json_array_push(state, (*visit_decl)(cursor));
 
   return CXChildVisit_Continue;
 }
