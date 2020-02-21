@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:meta/meta.dart';
 
 typedef CodeWriter = void Function(CodeBuffer);
@@ -79,6 +80,7 @@ class CodeBuffer {
     Iterable<String> typeParams = const [],
     Iterable<String> args = const [],
     bool override = false,
+    bool static = false,
     CodeWriter builder,
     String expression,
   }) {
@@ -86,6 +88,7 @@ class CodeBuffer {
 
     if (override) addLine('@override');
     _addIndent();
+    if (static) _buf.write('static ');
     _buf.write('$returns $name');
     if (typeParams.isNotEmpty) _buf.write("<${typeParams.join(', ')}>");
     _buf.write("(${args.join(', ')})");
@@ -106,9 +109,23 @@ class CodeBuffer {
     _blockLevel++;
   }
 
-  void closeBlock() {
+  void closeBlock({ bool addLine = false }) {
     _blockLevel--;
-    addLine('}');
+    this.addLine('}');
+    if (addLine) this.addLine();
+  }
+
+  void addArray(String name, List<String> items, { int perLine = 10 }) {
+    _addIndent();
+    _buf..write(name)..write(' = [\n');
+
+    for (var i = 0; i < items.length; i += perLine) {    
+      var end = math.min(i + perLine, items.length);
+      _addIndent();
+      _buf..writeAll(items.sublist(i,end), ', ')..write(',\n');
+    }
+
+    addLine('];');
   }
 
   void _addIndent() {

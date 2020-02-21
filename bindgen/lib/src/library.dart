@@ -69,6 +69,9 @@ void _writeEnum(CodeBuffer buf, EnumDeclaration decl) {
       decl.constants.forEach((constant, value) {
         classBuf.addLine("static const $constant = ${decl.name}._($value, '$constant');");
       });
+
+      classBuf.addLine();
+      classBuf.addArray('static const values', decl.constants.keys.toList());
     });
   }
 
@@ -112,8 +115,7 @@ void _writeSymbolLookup(CodeBuffer buf, String name) {
       funcBuf.addLine('final func = _symbolCache[name];');
       funcBuf.openBlock('if (func == null)');
       funcBuf.addLine("_lib ??= \$open('$name');");
-      funcBuf.closeBlock();
-      funcBuf.addLine();
+      funcBuf.closeBlock(addLine: true);
       funcBuf.addLine('return func as T;');
     }
   );
@@ -123,51 +125,42 @@ void _writeFunctions(CodeBuffer buf, Iterable<FunctionDeclaration> funcs) {
   for (var func in funcs) {
     final def = func.typedef;
     var dartType = def.dart == def.native ? def.nativeName : def.dartName;
-    final args = func.arguments.map((arg) {
-      var representation = _DartRepresentation.of(arg.type.kind);
-      return representation.ofValue(arg.name);
-    }).join(', ');
+    final args = func.arguments.map((arg) => arg.type.cValueOf(arg.name)).join(', ');
     var name = "'${func.name}'";
 
     buf.addLine();
     buf.addFunction(
       func.name.camelCase,
-      returns: func.returnType.dart,
-      args: func.arguments.map((arg) {
-        var representation = _DartRepresentation.of(arg.type.kind);
-        return '${representation.ofType(arg.type)} ${arg.name}';
-      }),
+      returns: func.returnType.dartRepresentation,
+      args: func.arguments.map((arg) => arg.dartRepresentation),
       builder: (funcBuf) {
-        
+        funcBuf.addLine('${func.returnType.dart} result;');
         funcBuf.addLine('var cachedFunc = _\$getDartFunctionFromCache<$dartType>($name);');
-        funcBuf.addLine('if (cachedFunc != null) return cachedFunc($args);');
-        funcBuf.addLine();
+        funcBuf.openBlock('if (cachedFunc != null)');
+        funcBuf.addLine('result = cachedFunc($args);');
+        funcBuf.closeBlock();
+        funcBuf.openBlock('else');
         funcBuf.addLine('_symbolCache[$name] = _lib.lookupFunction<${def.nativeName}, ${dartType}>($name);');
-        funcBuf.addLine('return _symbolCache[$name]($args);');
+        funcBuf.addLine('result = _symbolCache[$name]($args);');
+        funcBuf.closeBlock();
+        funcBuf.addLine('return ${func.returnType.dartValueOf('result')};');
       },
     );
   }
 }
 
-class _DartRepresentation {
-  const _DartRepresentation(this.ofType, this.ofValue);
+extension on FfiType {
+  String cValueOf(String expression) {
+    if (kind == FfiTypeKind.enumerated) return '($expression).index';
 
-  final String Function(FfiType) ofType;
-  final String Function(String) ofValue;
-
-  factory _DartRepresentation.of(FfiTypeKind kind) {
-    if (kind == FfiTypeKind.enumerated) {
-      return const _DartRepresentation(_enumType, _enumValue);
-    }
-
-    return const _DartRepresentation(_identityType, _identityValue);
+    return expression;
   }
 
-  static String _identityType(FfiType type) => type.dart;
+  String dartValueOf(String expression) {
+    if (kind == FfiTypeKind.enumerated) {
+      return '$alias.values.firstWhere((v) => v.index == $expression)';
+    }
 
-  static String _identityValue(String name) => name;
-
-  static String _enumType(FfiType type) => type.alias;
-
-  static String _enumValue(String name) => '$name.index';
+    return expression;
+  }
 }

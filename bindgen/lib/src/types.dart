@@ -140,6 +140,12 @@ class FfiType {
 
   String get _pointeeDartType => isPrimitive ? native : dart;
 
+  String get dartRepresentation {
+    if (kind == FfiTypeKind.enumerated) return alias;
+
+    return dart;
+  }
+
   @override
   operator ==(other) {
     return other is FfiType &&
