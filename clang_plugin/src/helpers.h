@@ -16,3 +16,27 @@ HashSet *new_hashset();
 bool hashset_insert_key(HashSet *set, char *key);
 
 void free_hashset(HashSet *set);
+
+typedef struct CursorNode {
+  CXCursor data;
+  CursorNode *prev;
+  CursorNode *next;
+} CursorNode;
+
+typedef struct CursorDeque {
+  CursorNode *front;
+  CursorNode *back;
+  HashSet *history;
+} CursorDeque;
+
+CursorDeque *new_cursor_deque(void);
+
+bool deque_has_cursors(CursorDeque *deque);
+
+void push_cursor(CursorDeque *deque, CXCursor cursor);
+
+void queue_cursor(CursorDeque *deque, CXCursor cursor);
+
+CXCursor pop_cursor(CursorDeque *deque);
+
+void free_cursor_deque(CursorDeque *deque);

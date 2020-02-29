@@ -72,3 +72,79 @@ void free_hashset(HashSet *set) {
   free(set->buffer);
   free(set);
 }
+
+static CursorNode *get_node_for(CursorDeque *deque, CXCursor cursor) {
+  const char *key = unwrap_string(clang_getCursorSpelling(cursor));
+  if (!hashset_insert_key(deque->history, key)) return NULL;
+
+  CursorNode *node = (CursorNode *)malloc(sizeof(CursorNode));
+  node->data = cursor;
+  node->prev = node->next = NULL;
+  return node;
+}
+
+CursorDeque *new_cursor_deque(void) {
+  CursorDeque *deque = (CursorDeque *)malloc(sizeof(CursorDeque));
+  deque->front = deque->back = NULL;
+  deque->history = new_hashset();
+  return deque;
+}
+
+bool deque_has_cursors(CursorDeque *deque) {
+  return deque->front != NULL;
+}
+
+void push_cursor(CursorDeque *deque, CXCursor cursor) {
+  CursorNode *node = get_node_for(deque, cursor);
+  if (node == NULL) return;
+
+  if (deque->front == NULL)
+    deque->front = deque->back = node; 
+  else { 
+    node->next = deque->front;
+    deque->front->prev = node;
+    deque->front = node;
+  }
+}
+
+void queue_cursor(CursorDeque *deque, CXCursor cursor) {
+  CursorNode *node = get_node_for(deque, cursor);
+  if (node == NULL) return;
+
+  if (deque->back == NULL)
+    deque->front = deque->back = node; 
+  else { 
+    node->prev = deque->back;
+    deque->back->next = node;
+    deque->back = node;
+  }
+}
+
+CXCursor pop_cursor(CursorDeque *deque) {
+  if (!deque_has_cursors(deque)) return NULL;
+
+  CursorNode *popped = deque->front;
+  CXCursor cursor = popped->data;
+
+  deque->front = deque->front->next;
+  if (deque->front == NULL)
+    deque->back == NULL;
+  else
+    deque->front->prev = NULL;
+
+  free(popped);
+  return cursor;
+}
+
+void free_cursor_deque(CursorDeque *deque) {
+  CursorNode *current = deque->front;
+
+  while (current != NULL) {
+    CursorNode *next = current->next;
+    free(current);
+    current = next;
+  }
+
+  free_hashset(deque->history);
+  free(deque);
+}
