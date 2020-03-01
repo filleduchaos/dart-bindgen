@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <string.h>
 #include "helpers.h"
 
@@ -25,10 +24,10 @@ HashSet *new_hashset() {
   return set;
 }
 
-(See https://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash)
+// See https://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash)
 uint64_t FNV_64_PRIME = 1099511628211ULL;
 uint64_t FNV_64_OFFSET = 14695981039346656037ULL;
-static uint64_t fnv_1a_hash(char *key) {
+static uint64_t fnv_1a_hash(const char *key) {
   size_t key_length = strlen(key);
   char *copy = malloc(key_length + 1);
   strcpy(copy, key);
@@ -53,14 +52,14 @@ static bool hashset_contains(HashSet *set, uint64_t hash) {
   return false;
 }
 
-bool hashset_insert_key(HashSet *set, char *key) {
+bool hashset_insert_key(HashSet *set, const char *key) {
   uint64_t hash = fnv_1a_hash(key);
 
   if (hashset_contains(set, hash)) return false;
 
   if (set->count == set->capacity) {
     set->capacity += HashSet_Block_Capacity;
-    set->buffer = (uint64_t)realloc(set->buffer, set->capacity * sizeof(uint64_t));
+    set->buffer = (uint64_t *)realloc(set->buffer, set->capacity * sizeof(uint64_t));
   }
 
   set->buffer[set->count] = hash;
@@ -121,19 +120,19 @@ void queue_cursor(CursorDeque *deque, CXCursor cursor) {
 }
 
 CXCursor pop_cursor(CursorDeque *deque) {
-  if (!deque_has_cursors(deque)) return NULL;
+  if (deque_has_cursors(deque)) {
+    CursorNode *popped = deque->front;
+    CXCursor cursor = popped->data;
 
-  CursorNode *popped = deque->front;
-  CXCursor cursor = popped->data;
+    deque->front = deque->front->next;
+    if (deque->front == NULL)
+      deque->back = NULL;
+    else
+      deque->front->prev = NULL;
 
-  deque->front = deque->front->next;
-  if (deque->front == NULL)
-    deque->back == NULL;
-  else
-    deque->front->prev = NULL;
-
-  free(popped);
-  return cursor;
+    free(popped);
+    return cursor;
+  }
 }
 
 void free_cursor_deque(CursorDeque *deque) {

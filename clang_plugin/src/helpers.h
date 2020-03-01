@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 #include <clang-c/Index.h>
 
 char *concat_strings(const char *s1, const char *s2);
@@ -13,14 +14,14 @@ typedef struct {
 
 HashSet *new_hashset();
 
-bool hashset_insert_key(HashSet *set, char *key);
+bool hashset_insert_key(HashSet *set, const char *key);
 
 void free_hashset(HashSet *set);
 
 typedef struct CursorNode {
   CXCursor data;
-  CursorNode *prev;
-  CursorNode *next;
+  struct CursorNode *prev;
+  struct CursorNode *next;
 } CursorNode;
 
 typedef struct CursorDeque {

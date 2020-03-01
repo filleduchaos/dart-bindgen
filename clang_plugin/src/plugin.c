@@ -1,4 +1,3 @@
-#include "helpers.h"
 #include "exceptions.h"
 #include "visitors/visitors.h"
 
@@ -36,11 +35,18 @@ WalkerResult *walk_clang_ast(char *header_filename) {
   WalkerResult *result = (WalkerResult *)malloc(sizeof(WalkerResult));
   CXIndex index = clang_createIndex(0, 1);
   CXTranslationUnit tu;
+  CursorDeque *deque = new_cursor_deque();
 
   try {
     tu = parse_file(&index, header_filename);
     CXCursor rootCursor = clang_getTranslationUnitCursor(tu);
-    traverse_root(rootCursor, state);
+    traverse_root(rootCursor, deque);
+
+    while (deque_has_cursors(deque)) {
+      CXCursor cursor = pop_cursor(deque);
+      json_value *declaration = visit_cursor(cursor, deque);
+      if (declaration != NULL) json_array_push(state, declaration);
+    }
 
     char *json_buf = malloc(json_measure(state));
     json_serialize(json_buf, state);
@@ -54,6 +60,7 @@ WalkerResult *walk_clang_ast(char *header_filename) {
   finally {
     if (tu) clang_disposeTranslationUnit(tu);
     clang_disposeIndex(index);
+    free_cursor_deque(deque);
     json_builder_free(state);
   }
 

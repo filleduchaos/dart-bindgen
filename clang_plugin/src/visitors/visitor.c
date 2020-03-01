@@ -1,17 +1,19 @@
 #include "visitors.h"
-#include "../helpers.h"
 #include "../exceptions.h"
 
-static DeclarationVisitor visitor_for(CXCursor cursor) {
+json_value *visit_cursor(CXCursor cursor, CursorDeque *deque) {
   enum CXCursorKind cursorKind = clang_getCursorKind(cursor);
 
   switch (cursorKind) {
     case CXCursor_FunctionDecl:
-      return visit_function;
+      return visit_function(cursor, deque);
     case CXCursor_StructDecl:
-      return visit_struct;
+      return visit_struct(cursor, deque);
     case CXCursor_EnumDecl:
-      return visit_enum;
+      return visit_enum(cursor, deque);
+    case CXCursor_InclusionDirective:
+      // A very weird hack but bear with it
+      return NULL;
     default: {
       const char *type = unwrap_string(clang_getCursorKindSpelling(cursorKind));
       throw(&UnhandledDeclarationException, type);
@@ -19,19 +21,18 @@ static DeclarationVisitor visitor_for(CXCursor cursor) {
   }
 }
 
-static enum CXChildVisitResult visitor(CXCursor cursor, CXCursor parent, CXClientData clientData) {
+static enum CXChildVisitResult queue_declarations(CXCursor cursor, CXCursor parent, CXClientData clientData) {
   CXSourceLocation location = clang_getCursorLocation(cursor);
-  if (!clang_Location_isFromMainFile(location)) return CXChildVisit_Continue;
 
-  json_value *state = (json_value *)(clientData);
-  DeclarationVisitor visit_decl = visitor_for(cursor);
-  json_array_push(state, (*visit_decl)(cursor));
+  if (clang_Location_isFromMainFile(location)) {
+    queue_cursor(clientData, cursor);
+  }
 
   return CXChildVisit_Continue;
 }
 
-void traverse_root(CXCursor cursor, json_value *state) {
-  clang_visitChildren(cursor, visitor, state);
+void traverse_root(CXCursor rootCursor, CursorDeque *deque) {
+  clang_visitChildren(rootCursor, queue_declarations, deque);
 }
 
 json_value *new_declaration(CXCursor cursor, const char *type) {
