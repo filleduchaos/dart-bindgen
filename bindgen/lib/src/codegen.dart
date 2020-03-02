@@ -3,6 +3,23 @@ import 'package:bindgen/src/code_buffer.dart';
 import 'package:bindgen/src/declaration.dart';
 import 'package:bindgen/src/types.dart';
 
+const idiomaticConverterClass = '''
+abstract class _\$ {
+  static T enumFromC<T>(List<T> values, int index) =>
+    nullOr(index, (i) => values.firstWhere((dynamic v) => v.index == i));
+
+  static int boolToC(bool value) => nullOr(value, (v) => v ? 1 : 0);
+
+  static bool boolFromC(int value) => nullOr(value, (v) => !(v == 0));
+
+  static ffi.Pointer<ffi.Utf8> stringToC(String value) => nullOr(value, ffi.Utf8.toUtf8);
+
+  static String stringFromC(ffi.Pointer<ffi.Utf8> value) => nullOr(value, ffi.Utf8.fromUtf8);
+
+  static O nullOr<I, O>(I foo, O Function(I) transform) =>
+    foo == null ? null : transform(foo);
+}''';
+
 void definition<T extends Declaration>(CodeBuffer buf, Iterable<T> declarations) {
   void Function(CodeBuffer, T) definer = (() {
     switch (T) {
@@ -136,17 +153,20 @@ void _writeFunctionStub(CodeBuffer buf, FunctionDeclaration func) {
   buf.addLine('return ${func.returnType.dartValueOf('result')};');
 }
 
+String _nullAware(String nullable, String expression) =>
+  '($nullable == null) ? null : $expression';
+
 extension on FfiType {
   String cValueOf(String expression) {
     if (pointerDepth != 0) return expression;
 
     switch (kind) {
       case FfiTypeKind.enumerated:
-        return '($expression).index';
+        return '$expression?.index';
       case FfiTypeKind.boolean:
-        return '($expression ? 1 : 0)';
+        return '_\$.boolToC($expression)';
       case FfiTypeKind.string:
-        return 'ffi.Utf8.toUtf8($expression)';
+        return '_\$.stringToC($expression)';
       default:
         return expression;
     }
@@ -157,11 +177,11 @@ extension on FfiType {
 
     switch (kind) {
       case FfiTypeKind.enumerated:
-        return '$alias.values.firstWhere((v) => v.index == $expression)';
+        return '_\$.enumFromC($alias.values, $expression)';
       case FfiTypeKind.boolean:
-        return '!($expression == 0)';
+        return '_\$.boolFromC($expression)';
       case FfiTypeKind.string:
-        return 'ffi.Utf8.fromUtf8($expression)';
+        return '_\$.stringFromC($expression)';
       default:
         return expression;
     }

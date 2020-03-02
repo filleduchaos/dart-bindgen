@@ -14,6 +14,12 @@ const char *unwrap_string(CXString cxStr) {
   return str;
 };
 
+typedef struct {
+  uint64_t *buffer;
+  size_t capacity;
+  size_t count;
+} HashSet;
+
 size_t HashSet_Block_Capacity = 16;
 
 HashSet *new_hashset() {
@@ -71,6 +77,18 @@ void free_hashset(HashSet *set) {
   free(set->buffer);
   free(set);
 }
+
+struct CursorNode {
+  CXCursor data;
+  struct CursorNode *prev;
+  struct CursorNode *next;
+};
+
+struct CursorDeque {
+  CursorNode *front;
+  CursorNode *back;
+  HashSet *history;
+};
 
 static CursorNode *get_node_for(CursorDeque *deque, CXCursor cursor) {
   const char *key = unwrap_string(clang_getCursorSpelling(cursor));

@@ -44,7 +44,10 @@ class Library {
         generate.symbolLookup(classBuf, name);
         generate.functions(classBuf, members.whereType<FunctionDeclaration>());
       });
+      buf.addLine();
     }
+
+    buf.addLine(generate.idiomaticConverterClass);
 
     return buf.toString();
   }
