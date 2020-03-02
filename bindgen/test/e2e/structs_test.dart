@@ -1,5 +1,4 @@
 import 'dart:ffi';
-import 'package:ffi/ffi.dart';
 import 'package:test/test.dart';
 import 'generated_library.dart';
 import '../test_helper.dart' show isE2E;
@@ -36,7 +35,7 @@ void main() {
 
       dynamic place = (result as Pointer<Struct>).ref;
       expect(place.runtimeType, equals(Place));
-      expect(Utf8.fromUtf8(place.name), equals('Lagos'));
+      expect(place.name, equals('Lagos'));
 
       dynamic coordinate = (place.coordinate as Pointer<Struct>).ref;
       expect(coordinate.runtimeType, equals(Coordinate));

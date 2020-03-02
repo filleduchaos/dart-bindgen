@@ -51,7 +51,24 @@ void _defineStruct(CodeBuffer buf, StructDeclaration decl) {
     var lastField = decl.fields.last;
     for (var field in decl.fields) {
       if (field.type.isPrimitive) classBuf.addLine('@${field.type.native}()');
-      classBuf.addLine('${field.type.dart} ${field.name};');
+
+      if (field.type.isAliased) {
+        var name = '\$${field.name}';
+        classBuf.addLine('${field.type.dart} $name;');
+        classBuf.addGetter(
+          field.name,
+          type: field.type.alias,
+          expression: '${field.type.dartValueOf(name)}',
+        );
+        classBuf.addSetter(
+          field.name,
+          type: field.type.alias,
+          expression: "$name = ${field.type.cValueOf('value')}",
+        );
+      }
+      else {
+        classBuf.addLine('${field.type.dart} ${field.name};');
+      }
       if (field != lastField) classBuf.addLine();
     }
   });

@@ -141,10 +141,11 @@ class FfiType {
   bool get isPointer => pointerDepth > 0;
   bool get isPrimitive => kind == FfiTypeKind.primitive && dart != 'void';
   bool get isEnum => kind == FfiTypeKind.enumerated;
+  bool get isAliased => _aliasedTypes.contains(kind);
 
   String get _pointeeDartType => isPrimitive ? native : dart;
 
-  String get dartRepresentation => _aliasedTypes.contains(kind) ? alias : dart;
+  String get dartRepresentation => isAliased ? alias : dart;
 
   @override
   operator ==(other) {

@@ -72,7 +72,11 @@ class CodeBuffer {
   }
 
   void addGetter(String name, { @required String type, @required String expression }) {
-    addSpacedLine('$type get $name => $expression;');
+    addLine('$type get $name => $expression;');
+  }
+
+  void addSetter(String name, { @required String type, @required String expression }) {
+    addLine('set $name($type value) => $expression;');
   }
 
   void addFunction(String name, {
