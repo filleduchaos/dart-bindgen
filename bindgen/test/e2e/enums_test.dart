@@ -1,5 +1,3 @@
-import 'dart:ffi';
-import 'package:ffi/ffi.dart';
 import 'package:test/test.dart';
 import 'generated_library.dart';
 import '../test_helper.dart' show isE2E, WithIndex;
@@ -30,6 +28,12 @@ void main() {
       ({
         for (var m in members) m: m == 'green' ? 1 : 0,
       }).forEach(_testFunctionCalling(Color, 'isGreen'));
+
+      var redWavelength = 680;
+      var blueWavelength = 500;
+
+      expect(libEnums.call('getColor', [redWavelength]), equals(GeneratedLibrary.getEnumConstant(Color, 'red')));
+      expect(libEnums.call('getColor', [blueWavelength]), equals(GeneratedLibrary.getEnumConstant(Color, 'blue')));
     });
 
     test('Namespaced is a namespaced basic enum', () {

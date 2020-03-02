@@ -56,8 +56,9 @@ FfiType _getElaboratedType(Map<String, dynamic> type) {
 }
 
 const _typeInfo = {
-  // Not yet sure how to handle booleans? Contribute that to SDK?
-  // 'Bool': _Info()
+  // Should probably still contribute it to the SDK but this works for now?
+  // also this is VERY LIKELY not necessarily cross-platform compatible 😬
+  'Bool': FfiType(native: 'ffi.Uint8', dart: 'int', alias: 'bool', kind: FfiTypeKind.boolean),
   'Void': FfiType.primitive(native: 'ffi.Void', dart: 'void'),
   'Char_U': FfiType.int('ffi.Uint8'),
   'Char_S': FfiType.int('ffi.Uint8'),
@@ -70,7 +71,7 @@ const _typeInfo = {
   'ULong': FfiType.int('ffi.Uint64'),
   'Long': FfiType.int('ffi.Int64'),
   // Not yet sure how to handle long longs?
-  // 'ULongLong': _Info(),
+  // 'ULongLong': FfiType(),
   'Float': FfiType.double('ffi.Float'),
   'Double': FfiType.double('ffi.Double'),
 };
@@ -82,6 +83,7 @@ enum FfiTypeKind {
   string,
   struct,
   enumerated,
+  boolean,
 }
 
 FfiTypeKind _kindFromString(String str) {
@@ -96,6 +98,8 @@ FfiTypeKind _kindFromString(String str) {
 
 @sealed
 class FfiType {
+  static const _aliasedTypes = { FfiTypeKind.enumerated, FfiTypeKind.boolean, FfiTypeKind.string };
+
   const FfiType({
     @required this.native,
     @required this.dart,
@@ -121,7 +125,7 @@ class FfiType {
   const FfiType._utf({ int size })
     : native = 'ffi.Pointer<ffi.Utf$size>',
       dart = 'ffi.Pointer<ffi.Utf$size>',
-      alias = null,
+      alias = 'String',
       kind = FfiTypeKind.string,
       pointerDepth = 0;
 
@@ -137,8 +141,11 @@ class FfiType {
   bool get isPointer => pointerDepth > 0;
   bool get isPrimitive => kind == FfiTypeKind.primitive && dart != 'void';
   bool get isEnum => kind == FfiTypeKind.enumerated;
+  bool get isAliased => _aliasedTypes.contains(kind);
 
   String get _pointeeDartType => isPrimitive ? native : dart;
+
+  String get dartRepresentation => isAliased ? alias : dart;
 
   @override
   operator ==(other) {

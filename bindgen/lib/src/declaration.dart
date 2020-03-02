@@ -93,13 +93,12 @@ class FunctionDeclaration extends Declaration {
 }
 
 class VariableDeclaration extends Declaration {
-  const VariableDeclaration({ @required this.name, @required this.type, this.value });
+  const VariableDeclaration({ @required this.name, @required this.type });
 
   factory VariableDeclaration.fromJson(Map<String, dynamic> json) {
     return VariableDeclaration(
       name: json['name'] as String,
       type: getTypeInformation(json['type']),
-      value: json['value'],
     );
   }
 
@@ -109,18 +108,16 @@ class VariableDeclaration extends Declaration {
 
   final String name;
   final FfiType type;
-  final dynamic value;
 
-  String get inNative => '${type.native} $name';
-  String get inDart => '${type.dart} $name';
+  String get dartRepresentation => '${type.dartRepresentation} $name';
 }
 
 class _Typedef {
   _Typedef._(this.nativeName, this.dartName, this.native, this.dart);
 
   factory _Typedef.ofFunction(FunctionDeclaration decl) {
-    var nativeArgs = decl.arguments.map((arg) => arg.inNative).join(', ');
-    var dartArgs = decl.arguments.map((arg) => arg.inDart).join(', ');
+    var nativeArgs = decl.arguments.map((arg) => '${arg.type.native} ${arg.name}').join(', ');
+    var dartArgs = decl.arguments.map((arg) => '${arg.type.dart} ${arg.name}').join(', ');
     var nativeTypedef = '${decl.returnType.native} Function(${nativeArgs})';
     var dartTypedef = '${decl.returnType.dart} Function(${dartArgs})';
 

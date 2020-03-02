@@ -40,3 +40,5 @@ int is_foo(enum Namespaced placeholder);
 int can_hold_24_bits(enum DataType type);
 int is_billionaire(enum NetWorth netWorth);
 int failed(enum Status status);
+
+enum Color get_color(int wavelength);

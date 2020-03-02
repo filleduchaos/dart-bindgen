@@ -19,3 +19,13 @@ int is_billionaire(enum NetWorth netWorth) {
 int failed(enum Status status) {
   return status == warning || status == error;
 }
+
+enum Color get_color(int wavelength) {
+  if (wavelength > 635) return red;
+  else if (wavelength > 590) return orange;
+  else if (wavelength > 560) return yellow;
+  else if (wavelength > 520) return green;
+  else if (wavelength > 490) return blue;
+  else if (wavelength > 450) return indigo;
+  return violet;
+}
