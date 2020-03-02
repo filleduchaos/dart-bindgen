@@ -1,12 +1,6 @@
-import 'dart:ffi';
-import 'package:ffi/ffi.dart';
 import 'package:test/test.dart';
 import 'generated_library.dart';
 import '../test_helper.dart' show isE2E, WithIndex;
-
-enum Foo {
-  bar,
-}
 
 void main() {
   var libEnums = GeneratedLibrary('enums');

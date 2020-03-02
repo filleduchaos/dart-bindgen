@@ -12,6 +12,7 @@ json_value *visit_cursor(CXCursor cursor, CursorDeque *deque) {
     case CXCursor_EnumDecl:
       return visit_enum(cursor, deque);
     case CXCursor_InclusionDirective:
+    case CXCursor_MacroExpansion:
       // A very weird hack but bear with it
       return NULL;
     default: {

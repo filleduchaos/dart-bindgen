@@ -25,16 +25,17 @@ void _defineEnum(CodeBuffer buf, EnumDeclaration decl) {
   }
   else {
     buf.addClass(decl.name, builder: (classBuf) {
-      classBuf.addSpacedLine('const ${decl.name}._(this.index, this._name);');
+      classBuf.addSpacedLine('const ${decl.name}._(this.index, this.name);');
       classBuf.addLine('final int index;');
-      classBuf.addSpacedLine('final String _name;');
+      classBuf.addSpacedLine('final String name;');
 
-      classBuf.addGetter('name', type: 'String', expression: '_name');
       classBuf.addFunction('toString', returns: 'String', override: true, expression: "'${decl.name}.\${name}'");
       classBuf.addLine();
       
       decl.constants.forEach((constant, value) {
-        classBuf.addLine("static const $constant = ${decl.name}._($value, '$constant');");
+        // Hack to get around `values` being a "reserved" field
+        var name = constant == 'values' ? '\$values' : constant;
+        classBuf.addLine("static const $name = ${decl.name}._($value, '$constant');");
       });
 
       classBuf.addLine();
@@ -120,16 +121,32 @@ void _writeFunctionStub(CodeBuffer buf, FunctionDeclaration func) {
 
 extension on FfiType {
   String cValueOf(String expression) {
-    if (kind == FfiTypeKind.enumerated) return '($expression).index';
+    if (pointerDepth != 0) return expression;
 
-    return expression;
+    switch (kind) {
+      case FfiTypeKind.enumerated:
+        return '($expression).index';
+      case FfiTypeKind.boolean:
+        return '($expression ? 1 : 0)';
+      case FfiTypeKind.string:
+        return 'ffi.Utf8.toUtf8($expression)';
+      default:
+        return expression;
+    }
   }
 
   String dartValueOf(String expression) {
-    if (kind == FfiTypeKind.enumerated) {
-      return '$alias.values.firstWhere((v) => v.index == $expression)';
-    }
+    if (pointerDepth != 0) return expression;
 
-    return expression;
+    switch (kind) {
+      case FfiTypeKind.enumerated:
+        return '$alias.values.firstWhere((v) => v.index == $expression)';
+      case FfiTypeKind.boolean:
+        return '!($expression == 0)';
+      case FfiTypeKind.string:
+        return 'ffi.Utf8.fromUtf8($expression)';
+      default:
+        return expression;
+    }
   }
 }

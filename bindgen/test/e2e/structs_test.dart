@@ -31,7 +31,7 @@ void main() {
       var Place = libStructs.findStruct('Place');
       var Coordinate = libStructs.findStruct('Coordinate');
 
-      var result = libStructs.call('createPlace', [Utf8.toUtf8('Lagos'), 6.52, 3.37]);
+      var result = libStructs.call('createPlace', ['Lagos', 6.52, 3.37]);
       expect(result, isA<Pointer<Struct>>());
 
       dynamic place = (result as Pointer<Struct>).ref;
@@ -47,16 +47,16 @@ void main() {
     test("#helloWorld returns the string 'Hello World'", () {
       var result = libStructs.call('helloWorld');
 
-      expect(result, isA<Pointer<Utf8>>());
-      expect(Utf8.fromUtf8(result), equals('Hello World'));
+      expect(result, isA<String>());
+      expect(result, equals('Hello World'));
     });
 
     test('#reverse reverses a given string', () {
       var string = '!xob eht ni kcaj';
-      var result = libStructs.call('reverse', [Utf8.toUtf8(string), string.length]);
+      var result = libStructs.call('reverse', [string, string.length]);
 
-      expect(result, isA<Pointer<Utf8>>());
-      expect(Utf8.fromUtf8(result), equals('jack in the box!'));
+      expect(result, isA<String>());
+      expect(result, equals('jack in the box!'));
     });
   }, skip: !isE2E);
 }
