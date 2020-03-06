@@ -1,6 +1,12 @@
 #include "visitors.h"
 #include "../exceptions.h"
 
+static json_value *visit_typedef(CXCursor cursor, CursorDeque *deque) {
+  CXType canonicalType = clang_getTypedefDeclUnderlyingType(cursor);
+  push_cursor(deque, clang_getTypeDeclaration(canonicalType));
+  return NULL;
+}
+
 json_value *visit_cursor(CXCursor cursor, CursorDeque *deque) {
   enum CXCursorKind cursorKind = clang_getCursorKind(cursor);
 
@@ -11,6 +17,8 @@ json_value *visit_cursor(CXCursor cursor, CursorDeque *deque) {
       return visit_struct(cursor, deque);
     case CXCursor_EnumDecl:
       return visit_enum(cursor, deque);
+    case CXCursor_TypedefDecl:
+      return visit_typedef(cursor, deque);
     case CXCursor_InclusionDirective:
     case CXCursor_MacroExpansion:
       // A very weird hack but bear with it

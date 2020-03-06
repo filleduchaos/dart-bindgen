@@ -44,6 +44,7 @@ extern bool ex_finally();
 #define finally if (ex_finally())
 
 declare_exception(RuntimeException);
+declare_exception(OutOfMemoryException);
 declare_exception(UnparseableFileException);
 declare_exception(UnhandledDeclarationException);
 declare_exception(InvalidTypeException);

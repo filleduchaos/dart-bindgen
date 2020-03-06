@@ -32,7 +32,7 @@ static CXTranslationUnit parse_file(CXIndex *index, char *filename) {
 
 WalkerResult *walk_clang_ast(char *header_filename) {
   json_value *state = json_array_new(0);
-  WalkerResult *result = (WalkerResult *)malloc(sizeof(WalkerResult));
+  WalkerResult *result = checked_malloc(sizeof(WalkerResult));
   CXIndex index = clang_createIndex(0, 1);
   CXTranslationUnit tu;
   CursorDeque *deque = new_cursor_deque();
@@ -48,7 +48,7 @@ WalkerResult *walk_clang_ast(char *header_filename) {
       if (declaration != NULL) json_array_push(state, declaration);
     }
 
-    char *json_buf = malloc(json_measure(state));
+    char *json_buf = checked_malloc(json_measure(state));
     json_serialize(json_buf, state);
     result->status = WalkerStatus_OK;
     result->data = json_buf;

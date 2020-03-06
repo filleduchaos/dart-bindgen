@@ -1,8 +1,21 @@
 #include <string.h>
 #include "helpers.h"
+#include "exceptions.h"
+
+void *checked_malloc(size_t size) {
+  void *block = malloc(size);
+  if (block == NULL) throw(&OutOfMemoryException, NULL);
+  return block;
+}
+
+void *checked_realloc(void *ptr, size_t size) {
+  void *block = realloc(ptr, size);
+  if (block == NULL) throw(&OutOfMemoryException, NULL);
+  return block;
+}
 
 char *concat_strings(const char *s1, const char *s2) {
-  char *result = malloc(strlen(s1) + strlen(s2) + 1);
+  char *result = checked_malloc(strlen(s1) + strlen(s2) + 1);
   strcpy(result, s1);
   strcat(result, s2);
   return result;
@@ -23,8 +36,8 @@ typedef struct {
 size_t HashSet_Block_Capacity = 16;
 
 HashSet *new_hashset() {
-  HashSet *set = (HashSet *)malloc(sizeof(HashSet));
-  set->buffer = (uint64_t *)malloc(HashSet_Block_Capacity * sizeof(uint64_t));
+  HashSet *set = checked_malloc(sizeof(HashSet));
+  set->buffer = checked_malloc(HashSet_Block_Capacity * sizeof(uint64_t));
   set->capacity = HashSet_Block_Capacity;
   set->count = 0;
   return set;
@@ -35,7 +48,7 @@ uint64_t FNV_64_PRIME = 1099511628211ULL;
 uint64_t FNV_64_OFFSET = 14695981039346656037ULL;
 static uint64_t fnv_1a_hash(const char *key) {
   size_t key_length = strlen(key);
-  char *copy = malloc(key_length + 1);
+  char *copy =checked_malloc(key_length + 1);
   strcpy(copy, key);
 
   uint64_t hash = FNV_64_OFFSET;
@@ -65,7 +78,7 @@ bool hashset_insert_key(HashSet *set, const char *key) {
 
   if (set->count == set->capacity) {
     set->capacity += HashSet_Block_Capacity;
-    set->buffer = (uint64_t *)realloc(set->buffer, set->capacity * sizeof(uint64_t));
+    set->buffer = checked_realloc(set->buffer, set->capacity * sizeof(uint64_t));
   }
 
   set->buffer[set->count] = hash;
@@ -94,14 +107,14 @@ static CursorNode *get_node_for(CursorDeque *deque, CXCursor cursor) {
   const char *key = unwrap_string(clang_getCursorSpelling(cursor));
   if (!hashset_insert_key(deque->history, key)) return NULL;
 
-  CursorNode *node = (CursorNode *)malloc(sizeof(CursorNode));
+  CursorNode *node = checked_malloc(sizeof(CursorNode));
   node->data = cursor;
   node->prev = node->next = NULL;
   return node;
 }
 
 CursorDeque *new_cursor_deque(void) {
-  CursorDeque *deque = (CursorDeque *)malloc(sizeof(CursorDeque));
+  CursorDeque *deque = checked_malloc(sizeof(CursorDeque));
   deque->front = deque->back = NULL;
   deque->history = new_hashset();
   return deque;

@@ -27,7 +27,7 @@ String _helpText() {
 }
 
 class Bindgen {
-  static String get helpText => _helpText();
+  static final String helpText = _helpText();
 
   static ArgResults parseArguments(List<String> arguments) => _argParser.parse(arguments);
 

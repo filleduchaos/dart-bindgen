@@ -58,6 +58,11 @@ static json_value *unwrap_elaborated(CXType type, CursorDeque *deque) {
   return result;
 }
 
+static json_value *unwrap_typedef(CXType type, CursorDeque *deque) {
+  CXType canonicalType = clang_getCanonicalType(type);
+  return unwrap_type(canonicalType, deque);
+}
+
 json_value *unwrap_type(CXType type, CursorDeque *deque) {
   if (type.kind == CXType_Invalid || type.kind == CXType_Unexposed)
     throw(&InvalidTypeException, NULL);
@@ -69,6 +74,8 @@ json_value *unwrap_type(CXType type, CursorDeque *deque) {
     return unwrap_struct(type, deque);
   else if (type.kind == CXType_Enum)
     return unwrap_enum(type, deque);
+  else if (type.kind == CXType_Typedef)
+    return unwrap_typedef(type, deque);
   else if (type.kind == CXType_Elaborated)
     return unwrap_elaborated(type, deque);
   else
