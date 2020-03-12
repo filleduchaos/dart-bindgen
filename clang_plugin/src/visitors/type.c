@@ -4,9 +4,7 @@
 static void push_if_external_declaration(CXType type, CursorDeque *deque) {
   CXCursor cursor = clang_getTypeDeclaration(type);
   CXSourceLocation location = clang_getCursorLocation(cursor);
-  if (clang_Location_isFromMainFile(location)) return;
-
-  push_cursor(deque, cursor);
+  if (clang_Location_isInSystemHeader(location)) push_cursor(deque, cursor);
 }
 
 static json_value *unwrap_primitive(CXType type) {

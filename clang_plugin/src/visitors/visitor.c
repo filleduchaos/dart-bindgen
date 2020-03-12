@@ -33,7 +33,7 @@ json_value *visit_cursor(CXCursor cursor, CursorDeque *deque) {
 static enum CXChildVisitResult queue_declarations(CXCursor cursor, CXCursor parent, CXClientData clientData) {
   CXSourceLocation location = clang_getCursorLocation(cursor);
 
-  if (clang_Location_isFromMainFile(location)) {
+  if (!clang_Location_isInSystemHeader(location)) {
     queue_cursor(clientData, cursor);
   }
 
