@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "multipart.h"
 
 // Yeah yeah it's not real reverse geocoding
@@ -24,7 +25,7 @@ Person *create_person(char *name, char *company, char *position) {
 
 const char *get_bio(Person *person) {
   const char *bio = malloc(
-    sizeof person->name + sizeof person->company + sizeof person->position + 8
+    strlen(person->name) + strlen(person->company) + strlen(person->position) + 8
   );
   sprintf(bio, "%s (%s at %s)", person->name, person->position, person->company);
 

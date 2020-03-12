@@ -2,7 +2,7 @@ project(bindgen_e2e_tests LANGUAGES C)
 
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}")
-set(FIXTURES hello primitives structs enums booleans)
+set(FIXTURES hello primitives structs enums booleans multipart)
 
 foreach (fixture ${FIXTURES})
   add_library(${fixture} SHARED "src/${fixture}.c")
