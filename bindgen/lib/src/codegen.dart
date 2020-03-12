@@ -109,16 +109,17 @@ void symbolLookup(CodeBuffer buf, String name) {
   buf.addLine('static final \$open = DlOpen();');
   buf.addLine();
   buf.addFunction(
-    '_\$getDartFunctionFromCache',
-    typeParams: ['T'],
-    returns: 'T',
-    args: ['String name'],
+    '_\$functionFromCache',
+    typeParams: ['T extends Function', 'F extends Function'],
+    returns: 'F',
+    args: ['String name', 'F Function(ffi.Pointer<ffi.NativeFunction<T>> funcPtr) toFunc'],
     builder: (CodeBuffer funcBuf) {
-      funcBuf.addLine('final func = _symbolCache[name];');
-      funcBuf.openBlock('if (func == null)');
+      funcBuf.openBlock('if (_symbolCache[name] == null)');
       funcBuf.addLine("_lib ??= \$open('$name');");
+      funcBuf.addLine('var funcPtr = _lib.lookup<ffi.NativeFunction<T>>(name);');
+      funcBuf.addLine('_symbolCache[name] = toFunc(funcPtr);');
       funcBuf.closeBlock(addLine: true);
-      funcBuf.addLine('return func as T;');
+      funcBuf.addLine('return _symbolCache[name] as F;');
     }
   );
 }
@@ -140,21 +141,12 @@ void _writeFunctionStub(CodeBuffer buf, FunctionDeclaration func) {
   var dartType = def.dart == def.native ? def.nativeName : def.dartName;
   final args = func.arguments.map((arg) => arg.type.cValueOf(arg.name)).join(', ');
   var name = "'${func.name}'";
+  var toFunc = '(p) => p.asFunction<$dartType>()';
 
-  buf.addLine('${func.returnType.dart} result;');
-  buf.addLine('var cachedFunc = _\$getDartFunctionFromCache<$dartType>($name);');
-  buf.openBlock('if (cachedFunc != null)');
-  buf.addLine('result = cachedFunc($args);');
-  buf.closeBlock();
-  buf.openBlock('else');
-  buf.addLine('_symbolCache[$name] = _lib.lookupFunction<${def.nativeName}, ${dartType}>($name);');
-  buf.addLine('result = _symbolCache[$name]($args);');
-  buf.closeBlock();
-  buf.addLine('return ${func.returnType.dartValueOf('result')};');
+  buf.addLine('var _func = _\$functionFromCache<${def.nativeName}, ${dartType}>($name, $toFunc);');
+  buf.addLine('var _result = _func($args);');
+  buf.addLine('return ${func.returnType.dartValueOf('_result')};');
 }
-
-String _nullAware(String nullable, String expression) =>
-  '($nullable == null) ? null : $expression';
 
 extension on FfiType {
   String cValueOf(String expression) {
