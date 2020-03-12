@@ -5,7 +5,7 @@
 struct Context ExceptionContext = {0};
 
 void throw(const ExceptionType *type, const void *error_data) {
-  Exception *exception = (Exception *)malloc(sizeof(Exception));
+  Exception *exception = checked_malloc(sizeof(Exception));
   exception->type = type;
   exception->error_data = error_data;
   ExceptionContext.exception = exception;
@@ -61,3 +61,4 @@ define_exception(UnparseableFileException, "Unable to parse the provided header 
 define_exception(UnhandledDeclarationException, "Encountered a declaration that can't yet be handled: ", &string_data_formatter);
 define_exception(InvalidTypeException, "Encountered an invalid or unexposed type in an unexpected place", &identity_formatter);
 define_exception(UnhandledTypeException, "Encountered a type that can't yet be handled: ", &string_data_formatter);
+define_exception(OutOfMemoryException, "The running process does not have enough memory for this operation", &identity_formatter);

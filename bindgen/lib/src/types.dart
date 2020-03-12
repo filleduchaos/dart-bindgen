@@ -16,7 +16,7 @@ FfiType getTypeInformation(dynamic json) {
     return FfiType.pointerFrom(getTypeInformation(value));
   }
 
-  if (type['elaborated'] == true) {
+  if (type['kind'] != null) {
     return _getElaboratedType(type);
   }
 
@@ -35,10 +35,7 @@ FfiType _getBuiltin(String type) {
 
 FfiType _getElaboratedType(Map<String, dynamic> type) {
   var value = type['value'];
-
   var kindStr = type['kind'] as String;
-
-  if (kindStr == null) return getTypeInformation(value);
 
   var kind = _kindFromString(kindStr);
   value = (value as String).replaceFirst('$kindStr ', '');

@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdbool.h>
 
 bool is_prime(uint32_t number);

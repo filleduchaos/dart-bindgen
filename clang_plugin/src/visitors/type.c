@@ -4,9 +4,7 @@
 static void push_if_external_declaration(CXType type, CursorDeque *deque) {
   CXCursor cursor = clang_getTypeDeclaration(type);
   CXSourceLocation location = clang_getCursorLocation(cursor);
-  if (clang_Location_isFromMainFile(location)) return;
-
-  push_cursor(deque, cursor);
+  if (clang_Location_isInSystemHeader(location)) push_cursor(deque, cursor);
 }
 
 static json_value *unwrap_primitive(CXType type) {
@@ -58,6 +56,11 @@ static json_value *unwrap_elaborated(CXType type, CursorDeque *deque) {
   return result;
 }
 
+static json_value *unwrap_typedef(CXType type, CursorDeque *deque) {
+  CXType canonicalType = clang_getCanonicalType(type);
+  return unwrap_type(canonicalType, deque);
+}
+
 json_value *unwrap_type(CXType type, CursorDeque *deque) {
   if (type.kind == CXType_Invalid || type.kind == CXType_Unexposed)
     throw(&InvalidTypeException, NULL);
@@ -69,6 +72,8 @@ json_value *unwrap_type(CXType type, CursorDeque *deque) {
     return unwrap_struct(type, deque);
   else if (type.kind == CXType_Enum)
     return unwrap_enum(type, deque);
+  else if (type.kind == CXType_Typedef)
+    return unwrap_typedef(type, deque);
   else if (type.kind == CXType_Elaborated)
     return unwrap_elaborated(type, deque);
   else

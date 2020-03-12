@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <clang-c/Index.h>
 
+void *checked_malloc(size_t size);
+
+void *checked_realloc(void *ptr, size_t size);
+
 char *concat_strings(const char *s1, const char *s2);
 
 const char *unwrap_string(CXString cxStr);

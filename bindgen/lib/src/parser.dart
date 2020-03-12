@@ -39,5 +39,9 @@ class Parser {
       var message = _getMessage('unable to parse the loaded library.', json);
       throw BindgenException.onParse(message);
     }
+    on ArgumentError catch (e) {
+      var message = _getMessage(e.message, json);
+      throw BindgenException.onParse(message);
+    }
   }
 }
